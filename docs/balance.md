@@ -8,6 +8,14 @@ choice, whether the leader can be caught, and whether one way of playing beats e
 npx tablecraft balance games/tea.js --games 300 --bots module,greedy
 ```
 
+Set the balance analysis time limit in seconds with `--time`; it defaults to 60 seconds. The same option applies to
+parameter sweeps:
+
+```bash
+npx tablecraft balance games/tea.js --games 300 --bots module,greedy --time 90
+npx tablecraft balance games/tea.js --sweep options.target=15,20,25 --time 120
+```
+
 ```
 300/300 games finished
 length        avg 19.1 · median 18 · p10 8 · p90 32 moves
