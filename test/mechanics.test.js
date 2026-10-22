@@ -322,6 +322,7 @@ test('T.bag: pulls with and without replacement, chances and exact bust odds', (
 test('T.workers: capacity, one per player, blocked spaces, return home', () => {
   const b = T.workers.board({ forest: 1, mine: 2, market: null });
   assert.ok(T.workers.place(b, 'forest', 'a'));
+  assert.deepEqual(b.forest.workers, ['a']); // no worker id keeps the original plain player-id shape
   assert.ok(!T.workers.place(b, 'forest', 'b')); // full
   assert.ok(T.workers.place(b, 'mine', 'a'));
   assert.ok(!T.workers.place(b, 'mine', 'a', { onePerPlayer: true }));
@@ -333,6 +334,15 @@ test('T.workers: capacity, one per player, blocked spaces, return home', () => {
   assert.ok(!T.workers.place(b, 'nowhere', 'a'));
   assert.deepEqual(T.workers.returnAll(b), { a: 3, b: 10 });
   assert.equal(b.market.workers.length, 0);
+  const tracked = T.workers.board({ forest: 2, mine: 2 });
+  assert.ok(T.workers.place(tracked, 'forest', 'a', { worker: 'a-1' }));
+  assert.ok(T.workers.place(tracked, 'forest', 'a', { worker: 'a-2' }));
+  assert.ok(!T.workers.place(tracked, 'forest', 'a', { onePerPlayer: true, worker: 'a-3' }));
+  assert.ok(T.workers.place(tracked, 'mine', 'a'));
+  assert.deepEqual(tracked.forest.workers, [{ playerId: 'a', workerId: 'a-1' }, { playerId: 'a', workerId: 'a-2' }]);
+  assert.deepEqual(T.workers.spaces(tracked, 'a'), ['forest', 'mine']);
+  assert.deepEqual(T.workers.returnAll(tracked), { a: ['a-1', 'a-2', null] });
+  assert.deepEqual(tracked.forest.workers, []);
   // action points are a resource
   const p = { ap: 3 };
   assert.ok(T.pay(p, { ap: 2 }));
@@ -567,7 +577,8 @@ function probe(T, random) {
   const hands = { a: [1], b: [2] }; T.draft.pass(hands, ['a', 'b']); out.draft = hands;
   const deck = random.shuffle(T.range(20)); const row = []; T.market.refill(row, 4, deck, [], random); T.market.take(row, 1); out.market = row;
   const z = T.deckbuild.create(T.range(10), random, 5); T.deckbuild.cleanup(z, random, 5); out.deckbuild = z;
-  const b = T.workers.board({ s: 1 }); T.workers.place(b, 's', 'a'); out.workers = T.workers.available(b, 'b');
+  const b = T.workers.board({ s: 2 }); T.workers.place(b, 's', 'a', { worker: 'a-1' }); T.workers.place(b, 's', 'b');
+  out.workers = [T.workers.available(b, 'c'), T.workers.spaces(b, 'a'), T.workers.returnAll(b)];
   out.area = T.area.majority({ a: 2, b: 2, c: 1 }, [5, 3, 1]);
   out.sets = [T.sets.distinct(['a', 'a', 'b']), T.sets.runs([1, 2, 4])];
   out.tricks = T.tricks.winner([{ id: 'a', card: { suit: 'S', rank: 3 } }, { id: 'b', card: { suit: 'S', rank: 9 } }]);

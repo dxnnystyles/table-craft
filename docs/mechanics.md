@@ -213,16 +213,16 @@ actions(s, { playerId }) {
 
 ## T.workers
 
-Worker placement: `board = { spaceId: { cap, workers: [playerId, ...], blocked? } }` (`cap: null` = unlimited).
+Worker placement: `board = { spaceId: { cap, workers: [playerId | { playerId, workerId }, ...], blocked? } }` (`cap: null` = unlimited). Placements without IDs remain player-id strings; `opts.worker` stores a stable worker ID beside its player as plain JSON.
 
 | | |
 |---|---|
 | `T.workers.board(caps)` | `{ forest: 1, mine: 2, market: null }` → a board |
 | `T.workers.canPlace(board, space, playerId, { onePerPlayer }?)` | room, not `blocked`, and (with `onePerPlayer`) not already there |
-| `T.workers.place(board, space, playerId, opts?)` | → `true`, or `false` and nothing changes |
+| `T.workers.place(board, space, playerId, opts?)` | → `true`, or `false` and nothing changes; `opts.worker` tracks a worker ID |
 | `T.workers.available(board, playerId, opts?)` | the spaces this player may use now |
 | `T.workers.spaces(board, playerId)` | the spaces this player occupies |
-| `T.workers.returnAll(board)` | everyone's workers go home → `{ playerId: count }` |
+| `T.workers.returnAll(board)` | everyone goes home → counts for untracked workers; arrays of worker IDs per player for tracked workers (untracked workers in a mixed group are `null`) |
 
 ```js
 actions: (s, { playerId }) => T.workers.available(s.board, playerId).map((space) => ({ name: 'place', args: { space } })),

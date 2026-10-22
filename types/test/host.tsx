@@ -157,8 +157,11 @@ const risk: number = T.bag.odds({ white: 4, red: 2 }, 2, (d) => d.white >= 2);
 const yahtzee: boolean = T.dice.matches(T.dice.roll(rnd.api, 5), { groups: [5] });
 const tricks = T.tricks.winner([{ id: 'p1', card: { suit: 'h', rank: 3 } }, { id: 'p2', card: { suit: 'h', rank: 9 } }], { trump: 's' });
 const pending = T.pending.actions([{ playerId: 'p1', kind: 'target', options: ['p2', 'p3'] }], 'p1');
+const workerBoard = T.workers.board({ forest: 2 });
+T.workers.place(workerBoard, 'forest', 'p1', { worker: 'worker-1' });
+const returnedWorkers: Record<string, number | Array<string | null>> = T.workers.returnAll(workerBoard);
 const majority: Record<string, number> = T.area.score(T.area.tally([{ region: 'n', owner: 'p1' }]), [5, 3, 1], { tie: 'down' });
-void [drawn, first, phase, runValue, price, sealed?.price, vote.winner, known, played, risk, yahtzee, tricks?.id, pending[0]?.args?.choice, majority];
+void [drawn, first, phase, runValue, price, sealed?.price, vote.winner, known, played, risk, yahtzee, tricks?.id, pending[0]?.args?.choice, returnedWorkers, majority];
 
 // ------------------------------------------------------------------ tablecraft: clients, referee, balance, replays
 
