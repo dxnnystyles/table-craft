@@ -513,6 +513,10 @@ test('T.sets: kinds, n-of-a-kind, complete and distinct sets, runs', () => {
   assert.deepEqual(c, { gear: 3, tablet: 2, compass: 1 });
   assert.equal(T.sets.count([{ k: 'a' }, { k: 'a' }], 'k').a, 2);
   assert.equal(T.sets.ofAKind(c, 2), 2);
+  assert.equal(T.sets.ofAKind(c, 2, 'gear'), 1);
+  assert.equal(T.sets.ofAKind(c, 2, ['gear', 'tablet']), 2);
+  assert.equal(T.sets.ofAKind(tableau, 3, 'gear'), 1);
+  assert.equal(T.sets.ofAKind(tableau, 2, ['gear', 'tablet']), 2);
   assert.equal(T.sets.complete(c, ['gear', 'tablet', 'compass']), 1);
   assert.equal(T.sets.complete(c, ['gear', 'wheel']), 0);
   // 7 Wonders science: squares + 7 per complete set

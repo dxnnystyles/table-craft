@@ -552,7 +552,7 @@ Functions take counts (`{ kind: n }`) or a plain list of items.
 | | |
 |---|---|
 | `T.sets.count(items, kind?)` | `{ kind: n }`; `kind` is a getter (default: the item itself) |
-| `T.sets.ofAKind(counts, n)` | how many groups of `n` identical items |
+| `T.sets.ofAKind(counts, n, kind?)` | how many groups of `n` identical items; `kind` can restrict the count to one kind or a list of kinds |
 | `T.sets.complete(counts, kinds)` | how many full sets of one of each `kinds` |
 | `T.sets.distinct(counts)` | sizes of sets of different kinds, largest first (`{ a: 3, b: 1, c: 2 }` → `[3, 2, 1]`) |
 | `T.sets.runs(values)` · `T.sets.longest(values)` | runs of consecutive numbers / the longest one's length |
