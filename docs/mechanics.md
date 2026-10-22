@@ -383,7 +383,7 @@ A face-up row: an array of cards, where an empty slot is `null` (when cards don'
 
 | | |
 |---|---|
-| `T.market.refill(row, size, deck, discard, random)` | fill holes, then up to `size` cards, via `T.draw` → the new cards |
+| `T.market.refill(row, size, deck, discard, random, opts?)` | fill holes, then up to `size` cards, via `T.draw` → the new cards. `opts.reshuffle` defaults to `true`; set it to `false` to leave the discard pile untouched |
 | `T.market.take(row, i, slide = true)` | take the card in slot `i` → the card. `slide`: later cards move down a slot (getting cheaper); `false` leaves a hole |
 | `T.market.price(i, costs)` | `costs[i]` from a list (the last repeats), or `i × costs` for a number |
 | `T.market.clear(row, discard?)` | wipe the row (into `discard`) → the removed cards |

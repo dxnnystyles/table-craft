@@ -184,6 +184,11 @@ test('T.market: refill from the deck, take with and without sliding, prices, cle
   discard.push('x');
   assert.deepEqual(T.market.refill(row, 4, deck, discard, r), ['x']); // the hole is refilled from the reshuffled discard
   assert.deepEqual(T.market.refill(row, 6, deck, discard, r), []); // everything ran out
+  const noReshuffleDeck = ['y']; const noReshuffleDiscard = ['z']; const noReshuffleRow = [];
+  assert.deepEqual(T.market.refill(noReshuffleRow, 2, noReshuffleDeck, noReshuffleDiscard, r, { reshuffle: false }), ['y']);
+  assert.deepEqual(noReshuffleRow, ['y']);
+  assert.deepEqual(noReshuffleDeck, []);
+  assert.deepEqual(noReshuffleDiscard, ['z']); // remaining discard is left alone when reshuffling is disabled
   assert.equal(T.market.price(0, [1, 2, 3]), 1);
   assert.equal(T.market.price(5, [1, 2, 3]), 3);
   assert.equal(T.market.price(3, 1), 3);
