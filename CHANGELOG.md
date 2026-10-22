@@ -6,6 +6,7 @@ and the project uses [Semantic Versioning](https://semver.org/). Until 1.0, mino
 ## [Unreleased]
 
 ### Added
+- **Area scoring:** `T.area.majority` supports `{ fewest: true }`, including zero-count players by default.
 - **Mechanics library** on the rules kit — [docs/mechanics.md](docs/mechanics.md) catalogs 40+ board-game mechanics and
   the helpers that implement them: `T.turns` (pass to end the round, snake and initiative order), `T.flow` (rounds,
   phases, "finish the round"), `T.pending` (decision/reaction stack), `T.workers`, `T.rondel`, `T.track`, `T.secret`

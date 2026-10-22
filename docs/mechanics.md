@@ -573,12 +573,13 @@ const colours = T.sets.distinct(T.sets.count(p.cards, 'color')).reduce((a, n) =>
 | `T.area.tally(items, region = 'region', owner = 'owner', weight?)` | `{ region: { playerId: n } }` (getters; items without region or owner are skipped) |
 | `T.area.rank(counts, min = 1)` | one region → `[{ id, n, place }]`, ties share a place |
 | `T.area.control(counts, min = 1)` | the only player with the most, or `null` on a tie |
-| `T.area.majority(counts, awards = [5, 3, 1], { tie = 'split', min = 1 }?)` | one region → `{ playerId: points }` |
-| `T.area.score(tally, awards, opts?)` | majority scoring over every region; `awards` can be `(region) → [...]` |
+| `T.area.majority(counts, awards = [5, 3, 1], opts?)` | one region → `{ playerId: points }`; `opts.fewest` awards from fewest to most |
+| `T.area.score(tally, awards, opts?)` | majority scoring over every region; `awards` can be `(region) → [...]`; accepts the same `fewest` option |
 
 Tied players take up all the places they share. Tie rules for players tied over places *k…k+m−1*:
 `'split'` share the sum of those awards (rounded down), `'full'` each get the award of place *k*, `'down'` each get the
-lowest of them (El Grande), `'none'` get nothing.
+lowest of them (El Grande), `'none'` get nothing. `fewest: true` reverses the ranking while keeping these tie rules;
+it includes zero-count players by default. An explicit `min` still filters players below that count.
 
 ```js
 const tally = T.area.tally(s.pieces, 'region', 'owner');

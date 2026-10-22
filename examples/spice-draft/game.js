@@ -99,8 +99,7 @@ function scoreDay(s, ctx) {
   if (s.day === DAYS) {
     const counts = Object.fromEntries(s.players.map((p) => [p.id, p.seals]));
     const most = T.area.majority(counts, [SEAL], { tie: 'split', min: 0 });
-    // fewest: a majority over negated counts
-    const fewest = s.players.length > 2 ? T.area.majority(Object.fromEntries(s.players.map((p) => [p.id, -p.seals])), [SEAL], { tie: 'split', min: -Infinity }) : {};
+    const fewest = s.players.length > 2 ? T.area.majority(counts, [SEAL], { tie: 'split', fewest: true }) : {};
     for (const p of s.players) {
       const d = (most[p.id] || 0) - (fewest[p.id] || 0);
       if (!d) continue;

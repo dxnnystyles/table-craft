@@ -90,8 +90,9 @@ export function installScoring(T) {
   // awards by place ([5, 3, 1]) for one region → { playerId: points }. Ties occupying places k..k+m-1:
   // 'split' share the sum of those awards (rounded down), 'full' each get awards[k], 'down' each get the lowest of
   // them (El Grande), 'none' get nothing. Either way the tied players use up those places.
-  A.majority = function majority(counts, awards = [5, 3, 1], { tie = 'split', min = 1 } = {}) {
+  A.majority = function majority(counts, awards = [5, 3, 1], { tie = 'split', fewest = false, min = fewest ? 0 : 1 } = {}) {
     const out = {}; const r = A.rank(counts, min);
+    if (fewest) r.reverse();
     for (let j = 0; j < r.length;) {
       const group = r.filter((x) => x.place === r[j].place); const k = j, m = group.length;
       if (k >= awards.length) break;

@@ -546,10 +546,17 @@ test('T.area: tallies, control, majorities with every tie rule', () => {
   assert.deepEqual(T.area.majority(counts, [5, 3, 1], { tie: 'full' }), { a: 5, b: 5, c: 1 });
   assert.deepEqual(T.area.majority(counts, [5, 3, 1], { tie: 'down' }), { a: 3, b: 3, c: 1 });
   assert.deepEqual(T.area.majority(counts, [5, 3, 1], { tie: 'none' }), { a: 0, b: 0, c: 1 });
+  const fewestCounts = { a: 0, b: 0, c: 1, d: 2 };
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4, 2, 0], { fewest: true }), { a: 5, b: 5, c: 2, d: 0 });
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4, 2, 0], { fewest: true, tie: 'full' }), { a: 6, b: 6, c: 2, d: 0 });
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4, 2, 0], { fewest: true, tie: 'down' }), { a: 4, b: 4, c: 2, d: 0 });
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4, 2, 0], { fewest: true, tie: 'none' }), { a: 0, b: 0, c: 2, d: 0 });
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4], { fewest: true, min: 1 }), { c: 6, d: 4 });
   assert.deepEqual(T.area.majority({ a: 3, b: 3, c: 3 }, [6, 2]), { a: 2, b: 2, c: 2 }); // (6+2+0)/3 rounded down
   assert.deepEqual(T.area.majority({ a: 1, b: 0 }, [5, 3]), { a: 5 }); // 0 pieces never score
   assert.deepEqual(T.area.score(t, [5, 3]), { a: 5 + 2, b: 3 + 2, c: 2 });
   assert.deepEqual(T.area.score(t, (r) => (r === 'north' ? [10] : [1]), { tie: 'none' }), { a: 10, b: 0, c: 0 });
+  assert.deepEqual(T.area.score({ south: fewestCounts }, [6, 4, 2, 0], { fewest: true }), { a: 5, b: 5, c: 2, d: 0 });
 });
 
 // ------------------------------------------------------------ sandbox parity
@@ -568,7 +575,7 @@ function probe(T, random) {
   const deck = random.shuffle(T.range(20)); const row = []; T.market.refill(row, 4, deck, [], random); T.market.take(row, 1); out.market = row;
   const z = T.deckbuild.create(T.range(10), random, 5); T.deckbuild.cleanup(z, random, 5); out.deckbuild = z;
   const b = T.workers.board({ s: 1 }); T.workers.place(b, 's', 'a'); out.workers = T.workers.available(b, 'b');
-  out.area = T.area.majority({ a: 2, b: 2, c: 1 }, [5, 3, 1]);
+  out.area = [T.area.majority({ a: 2, b: 2, c: 1 }, [5, 3, 1]), T.area.majority({ a: 3, b: 1, c: 0 }, [5, 3], { fewest: true })];
   out.sets = [T.sets.distinct(['a', 'a', 'b']), T.sets.runs([1, 2, 4])];
   out.tricks = T.tricks.winner([{ id: 'a', card: { suit: 'S', rank: 3 } }, { id: 'b', card: { suit: 'S', rank: 9 } }]);
   out.dice = [T.dice.roll(random, 6), T.dice.odds(3, 6, (d) => d[0] === d[1])];

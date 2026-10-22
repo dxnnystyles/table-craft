@@ -644,9 +644,9 @@ export interface AreaKit {
   /** The only player with the most (≥ `min`), or `null` on a tie. */
   control(counts: Record<PlayerId, number>, min?: number): PlayerId | null;
   /** Awards by place for one region → `{ playerId: points }`. */
-  majority(counts: Record<PlayerId, number>, awards?: readonly number[], opts?: { tie?: MajorityTie; min?: number }): Record<PlayerId, number>;
+  majority(counts: Record<PlayerId, number>, awards?: readonly number[], opts?: { tie?: MajorityTie; fewest?: boolean; min?: number }): Record<PlayerId, number>;
   /** Majority scoring over every region; `awards` may depend on the region. */
-  score(tally: AreaTally, awards: readonly number[] | ((region: string) => readonly number[]), opts?: { tie?: MajorityTie; min?: number }): Record<PlayerId, number>;
+  score(tally: AreaTally, awards: readonly number[] | ((region: string) => readonly number[]), opts?: { tie?: MajorityTie; fewest?: boolean; min?: number }): Record<PlayerId, number>;
 }
 
 // ------------------------------------------------------------------ the kit
