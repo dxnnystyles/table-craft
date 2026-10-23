@@ -10,11 +10,11 @@ export function installCards(T) {
   // row: array of cards; an empty slot is null (when cards do not slide)
   const M = {};
   // fills empty slots left to right, then up to `size` cards → the new cards (fewer when deck and discard run out)
-  M.refill = (row, size, deck, discard, random) => {
+  M.refill = (row, size, deck, discard, random, { reshuffle = true } = {}) => {
     const out = [];
     for (let i = 0; i < Math.max(size, row.length); i++) {
       if (row[i] != null) continue;
-      const [c] = T.draw(deck, discard, random, 1);
+      const [c] = T.draw(deck, reshuffle ? discard : null, random, 1);
       if (c === undefined) break;
       row[i] = c; out.push(c);
     }

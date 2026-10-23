@@ -184,6 +184,11 @@ test('T.market: refill from the deck, take with and without sliding, prices, cle
   discard.push('x');
   assert.deepEqual(T.market.refill(row, 4, deck, discard, r), ['x']); // the hole is refilled from the reshuffled discard
   assert.deepEqual(T.market.refill(row, 6, deck, discard, r), []); // everything ran out
+  const noReshuffleDeck = ['y']; const noReshuffleDiscard = ['z']; const noReshuffleRow = [];
+  assert.deepEqual(T.market.refill(noReshuffleRow, 2, noReshuffleDeck, noReshuffleDiscard, r, { reshuffle: false }), ['y']);
+  assert.deepEqual(noReshuffleRow, ['y']);
+  assert.deepEqual(noReshuffleDeck, []);
+  assert.deepEqual(noReshuffleDiscard, ['z']); // remaining discard is left alone when reshuffling is disabled
   assert.equal(T.market.price(0, [1, 2, 3]), 1);
   assert.equal(T.market.price(5, [1, 2, 3]), 3);
   assert.equal(T.market.price(3, 1), 3);
@@ -513,6 +518,10 @@ test('T.sets: kinds, n-of-a-kind, complete and distinct sets, runs', () => {
   assert.deepEqual(c, { gear: 3, tablet: 2, compass: 1 });
   assert.equal(T.sets.count([{ k: 'a' }, { k: 'a' }], 'k').a, 2);
   assert.equal(T.sets.ofAKind(c, 2), 2);
+  assert.equal(T.sets.ofAKind(c, 2, 'gear'), 1);
+  assert.equal(T.sets.ofAKind(c, 2, ['gear', 'tablet']), 2);
+  assert.equal(T.sets.ofAKind(tableau, 3, 'gear'), 1);
+  assert.equal(T.sets.ofAKind(tableau, 2, ['gear', 'tablet']), 2);
   assert.equal(T.sets.complete(c, ['gear', 'tablet', 'compass']), 1);
   assert.equal(T.sets.complete(c, ['gear', 'wheel']), 0);
   // 7 Wonders science: squares + 7 per complete set
@@ -546,10 +555,17 @@ test('T.area: tallies, control, majorities with every tie rule', () => {
   assert.deepEqual(T.area.majority(counts, [5, 3, 1], { tie: 'full' }), { a: 5, b: 5, c: 1 });
   assert.deepEqual(T.area.majority(counts, [5, 3, 1], { tie: 'down' }), { a: 3, b: 3, c: 1 });
   assert.deepEqual(T.area.majority(counts, [5, 3, 1], { tie: 'none' }), { a: 0, b: 0, c: 1 });
+  const fewestCounts = { a: 0, b: 0, c: 1, d: 2 };
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4, 2, 0], { fewest: true }), { a: 5, b: 5, c: 2, d: 0 });
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4, 2, 0], { fewest: true, tie: 'full' }), { a: 6, b: 6, c: 2, d: 0 });
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4, 2, 0], { fewest: true, tie: 'down' }), { a: 4, b: 4, c: 2, d: 0 });
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4, 2, 0], { fewest: true, tie: 'none' }), { a: 0, b: 0, c: 2, d: 0 });
+  assert.deepEqual(T.area.majority(fewestCounts, [6, 4], { fewest: true, min: 1 }), { c: 6, d: 4 });
   assert.deepEqual(T.area.majority({ a: 3, b: 3, c: 3 }, [6, 2]), { a: 2, b: 2, c: 2 }); // (6+2+0)/3 rounded down
   assert.deepEqual(T.area.majority({ a: 1, b: 0 }, [5, 3]), { a: 5 }); // 0 pieces never score
   assert.deepEqual(T.area.score(t, [5, 3]), { a: 5 + 2, b: 3 + 2, c: 2 });
   assert.deepEqual(T.area.score(t, (r) => (r === 'north' ? [10] : [1]), { tie: 'none' }), { a: 10, b: 0, c: 0 });
+  assert.deepEqual(T.area.score({ south: fewestCounts }, [6, 4, 2, 0], { fewest: true }), { a: 5, b: 5, c: 2, d: 0 });
 });
 
 // ------------------------------------------------------------ sandbox parity
@@ -568,7 +584,7 @@ function probe(T, random) {
   const deck = random.shuffle(T.range(20)); const row = []; T.market.refill(row, 4, deck, [], random); T.market.take(row, 1); out.market = row;
   const z = T.deckbuild.create(T.range(10), random, 5); T.deckbuild.cleanup(z, random, 5); out.deckbuild = z;
   const b = T.workers.board({ s: 1 }); T.workers.place(b, 's', 'a'); out.workers = T.workers.available(b, 'b');
-  out.area = T.area.majority({ a: 2, b: 2, c: 1 }, [5, 3, 1]);
+  out.area = [T.area.majority({ a: 2, b: 2, c: 1 }, [5, 3, 1]), T.area.majority({ a: 3, b: 1, c: 0 }, [5, 3], { fewest: true })];
   out.sets = [T.sets.distinct(['a', 'a', 'b']), T.sets.runs([1, 2, 4])];
   out.tricks = T.tricks.winner([{ id: 'a', card: { suit: 'S', rank: 3 } }, { id: 'b', card: { suit: 'S', rank: 9 } }]);
   out.dice = [T.dice.roll(random, 6), T.dice.odds(3, 6, (d) => d[0] === d[1])];
