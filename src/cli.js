@@ -12,6 +12,16 @@ import { simulate, summarize, configure, analyzeBalance, sweepParameter, compare
 const [cmd, file, ...rest] = process.argv.slice(2);
 const opt = (name, def) => { const i = rest.indexOf(`--${name}`); return i >= 0 ? rest[i + 1] : def; };
 const num = (name, def) => (opt(name) != null ? Number(opt(name)) : def);
+function timeLimitMs() {
+  const i = rest.indexOf('--time');
+  if (i < 0) return 60000;
+  const seconds = Number(rest[i + 1]);
+  const milliseconds = seconds * 1000;
+  if (!Number.isFinite(seconds) || seconds <= 0 || !Number.isFinite(milliseconds)) {
+    throw new Error('--time must be a positive finite number of seconds');
+  }
+  return milliseconds;
+}
 if (opt('locale')) configure({ locale: opt('locale') });
 
 async function main() {
@@ -20,17 +30,18 @@ async function main() {
     console.log('Usage: tablecraft mcp | validate <game.js> | simulate <game.js> [--games N] [--players N] [--bot mode] [--time <seconds>] | audit <game.js>\n       | balance <game.js> [--games N] [--players N] [--bots module,greedy] [--sweep path=v1,v2] [--time <seconds>]\n       [--content data.json] [--locale tr]');
     process.exit(cmd ? 1 : 0);
   }
+  const limitMs = ['simulate', 'balance'].includes(cmd) ? timeLimitMs() : undefined;
   const source = readSource({ path: file });
   const content = readContent({ contentPath: opt('content') });
   if (cmd === 'validate') {
     const info = validateModule(new GameModule(source), { content });
     console.log(`✓ valid — ${info.meta.name || 'game'}${info.referee ? ` · referee ${info.referee.finished}/${info.referee.games}` : ''}`);
   } else if (cmd === 'simulate') {
-    const rep = simulate(source, { games: num('games', 100), players: num('players'), botMode: opt('bot', 'mixed'), seed: num('seed', 1), content, timeLimitMs: num('time', 60) * 1000 });
+    const rep = simulate(source, { games: num('games', 100), players: num('players'), botMode: opt('bot', 'mixed'), seed: num('seed', 1), content, timeLimitMs: limitMs });
     console.log(summarize(rep));
     process.exit(rep.ok ? 0 : 1);
   } else if (cmd === 'balance') {
-    const opts = { games: num('games', 200), players: num('players'), botMix: (opt('bots') || 'module').split(','), seed: num('seed', 1), content, timeLimitMs: num('time', 60) * 1000 };
+    const opts = { games: num('games', 200), players: num('players'), botMix: (opt('bots') || 'module').split(','), seed: num('seed', 1), content, timeLimitMs: limitMs };
     const sweep = opt('sweep');
     if (sweep) {
       const [path, list] = sweep.split('=');
