@@ -21,18 +21,17 @@ export function installEconomy(T) {
   W.available = (board, playerId, opts) => Object.keys(board).filter((id) => W.canPlace(board, id, playerId, opts));
   // spaces where this player has a worker
   W.spaces = (board, playerId) => Object.keys(board).filter((id) => board[id].workers.some((worker) => workerPlayer(worker) === playerId));
-  // end of round: untracked workers retain the old count; tracked workers return as ids per player
-  W.returnAll = (board) => {
+  // end of round: counts are the compatible default; ids returns tracked workers only
+  W.returnAll = (board, opts) => {
     const out = {};
+    const ids = opts?.ids === true;
     for (const s of Object.values(board)) {
       for (const worker of s.workers) {
-        const p = workerPlayer(worker);
-        if (typeof worker === 'string') {
-          if (Array.isArray(out[p])) out[p].push(null);
-          else out[p] = (out[p] || 0) + 1;
+        const playerId = workerPlayer(worker);
+        if (ids) {
+          if (typeof worker !== 'string') (out[playerId] ||= []).push(worker.workerId);
         } else {
-          if (!Array.isArray(out[p])) out[p] = Array(out[p] || 0).fill(null);
-          out[p].push(worker.workerId);
+          out[playerId] = (out[playerId] || 0) + 1;
         }
       }
       s.workers = [];

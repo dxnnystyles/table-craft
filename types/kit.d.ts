@@ -279,8 +279,12 @@ export interface WorkersKit {
   available(board: WorkerBoard, playerId: PlayerId, opts?: { onePerPlayer?: boolean }): string[];
   /** The spaces this player occupies. */
   spaces(board: WorkerBoard, playerId: PlayerId): string[];
-  /** Every worker goes home → counts when untracked; worker-id arrays per player when tracked (null marks an untracked worker in a mixed group). */
-  returnAll(board: WorkerBoard): Record<PlayerId, number | Array<string | null>>;
+  /** Every worker goes home → counts for both tracked and untracked workers. */
+  returnAll(board: WorkerBoard): Record<PlayerId, number>;
+  /** Every worker goes home → tracked worker IDs per player; untracked workers are omitted. */
+  returnAll(board: WorkerBoard, opts: { ids: true }): Record<PlayerId, string[]>;
+  /** The count-based behavior is also available when IDs are explicitly disabled. */
+  returnAll(board: WorkerBoard, opts: { ids?: false }): Record<PlayerId, number>;
 }
 
 /** `T.track`: fame, morale, temperature tracks with milestones. */
@@ -456,7 +460,7 @@ export interface RolesKit {
 /** `T.market`: a face-up row (an empty slot is `null` when cards don't slide). */
 export interface MarketKit {
   /** Fill holes, then up to `size` cards → the new cards. */
-  refill<C>(row: Array<C | null>, size: number, deck: C[], discard: C[] | null | undefined, random: Random): C[];
+  refill<C>(row: Array<C | null>, size: number, deck: C[], discard: C[] | null | undefined, random: Random, opts?: { reshuffle?: boolean }): C[];
   /** Take the card in slot `i` → it; `slide: false` leaves a hole. */
   take<C>(row: Array<C | null>, i: number, slide?: boolean): C | undefined;
   /** Cost of slot `i`: `costs[i]` (the last repeats) or `i × costs`. */
@@ -626,7 +630,7 @@ export interface SetsKit {
   /** `{ kind: n }`; `kind` is a getter (default: the item itself). */
   count<X>(items: readonly X[] | null | undefined, kind?: Getter<X>): Record<string, number>;
   /** How many groups of `n` identical items. */
-  ofAKind(counts: CountsOrItems, n: number): number;
+  ofAKind(counts: CountsOrItems, n: number, kind?: string | readonly string[]): number;
   /** How many complete sets of one of each of `kinds`. */
   complete(counts: CountsOrItems, kinds: readonly string[]): number;
   /** Sizes of sets of different kinds, largest first. */
@@ -652,9 +656,9 @@ export interface AreaKit {
   /** The only player with the most (≥ `min`), or `null` on a tie. */
   control(counts: Record<PlayerId, number>, min?: number): PlayerId | null;
   /** Awards by place for one region → `{ playerId: points }`. */
-  majority(counts: Record<PlayerId, number>, awards?: readonly number[], opts?: { tie?: MajorityTie; min?: number }): Record<PlayerId, number>;
+  majority(counts: Record<PlayerId, number>, awards?: readonly number[], opts?: { tie?: MajorityTie; fewest?: boolean; min?: number }): Record<PlayerId, number>;
   /** Majority scoring over every region; `awards` may depend on the region. */
-  score(tally: AreaTally, awards: readonly number[] | ((region: string) => readonly number[]), opts?: { tie?: MajorityTie; min?: number }): Record<PlayerId, number>;
+  score(tally: AreaTally, awards: readonly number[] | ((region: string) => readonly number[]), opts?: { tie?: MajorityTie; fewest?: boolean; min?: number }): Record<PlayerId, number>;
 }
 
 // ------------------------------------------------------------------ the kit

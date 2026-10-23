@@ -54,13 +54,18 @@ const P = (s, id) => s.players.find((p) => p.id === id);
 function log(s, t) { s.log.push(`R${s.flow.round} · ${t}`); if (s.log.length > 60) s.log.shift(); }
 const capOf = (sp, n) => sp.cap[Math.min(2, n - 2)];
 const resText = (o) => Object.entries(o).filter(([, v]) => v).map(([k, v]) => `${v} ${k === 'coins' ? 'coin' + (v > 1 ? 's' : '') : RES[k].name}`).join(', ');
-const workersLeft = (s, id) => WORKERS - s.placed.filter((x) => x.playerId === id).length;
+const placements = (s) => SPACES.flatMap((sp) => s.board[sp.id].workers.map((worker, order) => ({
+  playerId: typeof worker === 'string' ? worker : worker.playerId,
+  workerId: typeof worker === 'string' ? null : worker.workerId,
+  space: sp.id,
+  order,
+})));
+const workersLeft = (s, id) => WORKERS - placements(s).filter((x) => x.playerId === id).length;
 const price = (s, id) => T.market.price(s.row.indexOf(id), PRICES);
 const fullCost = (s, id) => ({ ...BYID[id].cost, coins: price(s, id) });
 const affordable = (s, p) => s.row.filter((id) => id != null && T.canPay(p.res, fullCost(s, id)));
 
 function startRound(s, ctx) {
-  s.placed = [];
   log(s, `— Round ${s.flow.round} —`);
   const first = P(s, T.turns.current(s.turn));
   ctx.fx({ type: 'banner', text: `Round ${s.flow.round}${T.flow.isLastRound(s.flow) ? ' · last round' : ''}`, sub: `${first.name} places first`, color: '#4f8fb8', sound: 'gong' });
@@ -90,7 +95,6 @@ function resolve(s, ctx) {
 
 function cleanup(s, ctx) {
   T.workers.returnAll(s.board);
-  s.placed = [];
   if (!s.takenThisRound && s.row[0] != null) {
     const gone = T.market.take(s.row, 0);
     s.gone.push(gone);
@@ -136,7 +140,7 @@ module.exports = {
       flow: T.flow.create(['place', 'resolve', 'cleanup'], { rounds: ROUNDS[n] }),
       turn: T.turns.create(players.map((p) => p.id)),
       board: T.workers.board(Object.fromEntries(SPACES.map((sp) => [sp.id, capOf(sp, n)]))),
-      placed: [], queue: [], pending: [], deck, row, gone: [], takenThisRound: false, deckOut: false, over: false, log: [],
+      queue: [], pending: [], deck, row, gone: [], takenThisRound: false, deckOut: false, over: false, log: [],
       players: players.map((p, i) => ({ id: p.id, name: p.name, color: COLORS[i % 4], res: { fish: 0, timber: 0, cloth: 0, coins: START_COINS }, vp: 0, done: [], contracts: 0, coinsLeft: 0, final: 0, bonus: 0 })),
     };
     startRound(s, { fx });
@@ -150,14 +154,16 @@ module.exports = {
       const space = ctx.args && ctx.args.space;
       if (typeof space !== 'string' || !SPACE[space]) return { error: 'Unknown action space' };
       if (workersLeft(s, ctx.playerId) <= 0) return { error: 'All your workers are out' };
-      if (!T.workers.place(s.board, space, ctx.playerId)) return { error: `The ${SPACE[space].name} is full` };
+      const workerIndex = WORKERS - workersLeft(s, ctx.playerId);
+      if (!T.workers.place(s.board, space, ctx.playerId, { worker: `${ctx.playerId}:${workerIndex}` })) return { error: `The ${SPACE[space].name} is full` };
       const p = P(s, ctx.playerId);
-      s.placed.push({ playerId: p.id, space });
       log(s, `${p.name} sent a worker to the ${SPACE[space].name}.`);
       if (workersLeft(s, p.id) === 0) T.turns.pass(s.turn, p.id);
       if (T.turns.next(s.turn) === null) {
         T.flow.next(s.flow); // → resolve
-        s.queue = SPACES.flatMap((sp) => s.placed.filter((x) => x.space === sp.id));
+        s.queue = SPACES.flatMap((sp) => s.board[sp.id].workers.map((worker) => ({
+          space: sp.id, playerId: typeof worker === 'string' ? worker : worker.playerId,
+        })));
         ctx.fx({ type: 'banner', text: 'The harbor gets to work', sub: 'Spaces pay out in order', ms: 1600, color: '#2f6b48' });
         resolve(s, ctx);
       }
@@ -227,11 +233,11 @@ module.exports = {
       zones.push({ id: `home:${p.id}`, seat: p.id, layout: 'row', at: [-15, 5], gap: 0.8, label: 'Dockhands' });
       zones.push({ id: `res:${p.id}`, seat: p.id, layout: 'row', at: [3, 5], gap: 1.2 });
       zones.push({ id: `done:${p.id}`, seat: p.id, layout: 'row', at: [0, -4], gap: -2.4, label: `${p.name}'s shipped contracts` });
-      const mine = s.placed.filter((x) => x.playerId === p.id);
+      const mine = placements(s).filter((x) => x.playerId === p.id);
       for (let k = 0; k < WORKERS; k++) {
-        const at = mine[k];
+        const at = mine.find((x) => x.workerId === `${p.id}:${k}`);
         objects.push({ id: `w:${p.id}:${k}`, kind: 'token', shape: 'meeple', color: p.color, size: 2, zone: at ? `sp:${at.space}` : `home:${p.id}`,
-          order: at ? s.placed.indexOf(at) : k, tip: `${p.name}'s dockhand${at ? ` at the ${SPACE[at.space].name}` : ''}` });
+          order: at ? at.order : k, tip: `${p.name}'s dockhand${at ? ` at the ${SPACE[at.space].name}` : ''}` });
       }
       RES_KEYS.forEach((k, i) => objects.push({ id: `${k}:${p.id}`, kind: 'token', shape: 'cube', color: RES[k].color, size: 1.3, count: p.res[k], zone: `res:${p.id}`, order: i, label: `${p.res[k]}`, showCount: false, tip: `${p.name}: ${p.res[k]} ${RES[k].name}` }));
       objects.push({ id: `coins:${p.id}`, kind: 'token', shape: 'coin', color: '#d4a72c', count: Math.min(p.res.coins, 15), zone: `res:${p.id}`, order: 9, label: `${p.res.coins}`, showCount: false, tip: `${p.name}: ${p.res.coins} coins` });
@@ -305,7 +311,7 @@ module.exports = {
   score(s, { playerId }) {
     const p = P(s, playerId);
     const have = incoming(s, p);
-    const office = s.flow.phase === 'place' && s.board.office.workers.includes(playerId)
+    const office = s.flow.phase === 'place' && T.workers.spaces(s.board, playerId).includes('office')
       ? Math.max(0, ...affordable(s, { res: have }).map((id) => BYID[id].vp)) * 0.8 : 0;
     return p.vp + office + have.coins * 0.3 + (have.fish + have.timber) * 0.6 + have.cloth * 0.9;
   },
@@ -331,7 +337,7 @@ module.exports = {
       return actions.find((a) => a.args.choice === k);
     }
     const need = missing(s, p);
-    const officeMine = s.board.office.workers.filter((x) => x === playerId).length;
+    const officeMine = T.workers.spaces(s.board, playerId).includes('office') ? 1 : 0;
     const value = {
       pier: need.fish * 3 + 0.8, yard: need.timber * 3 + 0.8, loom: need.cloth * 3.5 + 1.2,
       stall: Math.max(...RES_KEYS.map((k) => need[k])) * 2 + 0.5, customs: (p.res.coins < 3 ? 4 : 1.5),
@@ -371,7 +377,7 @@ function missing(s, p) {
 // resources this player will have once this round's gathering spaces pay out
 function incoming(s, p) {
   const have = clone(p.res);
-  for (const x of s.placed) if (x.playerId === p.id && SPACE[x.space].gain) T.add(have, SPACE[x.space].gain);
+  for (const x of placements(s)) if (x.playerId === p.id && SPACE[x.space].gain) T.add(have, SPACE[x.space].gain);
   return have;
 }
 

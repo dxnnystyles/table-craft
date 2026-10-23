@@ -47,7 +47,10 @@ export function installScoring(T) {
   };
   const cnt = (c) => (Array.isArray(c) ? C.count(c) : c || {});
   // how many groups of n identical items (pairs: n = 2)
-  C.ofAKind = (counts, n) => Object.values(cnt(counts)).reduce((a, v) => a + Math.floor(v / n), 0);
+  C.ofAKind = (counts, n, kind) => {
+    const kinds = kind == null ? null : (Array.isArray(kind) ? kind : [kind]);
+    return Object.entries(cnt(counts)).reduce((a, [k, v]) => a + (kinds && !kinds.includes(k) ? 0 : Math.floor(v / n)), 0);
+  };
   // how many complete sets holding one of each of `kinds`
   C.complete = (counts, kinds) => { const c = cnt(counts); return kinds && kinds.length ? Math.min(...kinds.map((k) => c[k] || 0)) : 0; };
   // sizes of the sets of different kinds, largest first ({ a: 3, b: 1, c: 2 } → [3, 2, 1])
@@ -90,8 +93,9 @@ export function installScoring(T) {
   // awards by place ([5, 3, 1]) for one region → { playerId: points }. Ties occupying places k..k+m-1:
   // 'split' share the sum of those awards (rounded down), 'full' each get awards[k], 'down' each get the lowest of
   // them (El Grande), 'none' get nothing. Either way the tied players use up those places.
-  A.majority = function majority(counts, awards = [5, 3, 1], { tie = 'split', min = 1 } = {}) {
+  A.majority = function majority(counts, awards = [5, 3, 1], { tie = 'split', fewest = false, min = fewest ? 0 : 1 } = {}) {
     const out = {}; const r = A.rank(counts, min);
+    if (fewest) r.reverse();
     for (let j = 0; j < r.length;) {
       const group = r.filter((x) => x.place === r[j].place); const k = j, m = group.length;
       if (k >= awards.length) break;

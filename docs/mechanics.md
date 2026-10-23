@@ -222,7 +222,8 @@ Worker placement: `board = { spaceId: { cap, workers: [playerId | { playerId, wo
 | `T.workers.place(board, space, playerId, opts?)` | → `true`, or `false` and nothing changes; `opts.worker` tracks a worker ID |
 | `T.workers.available(board, playerId, opts?)` | the spaces this player may use now |
 | `T.workers.spaces(board, playerId)` | the spaces this player occupies |
-| `T.workers.returnAll(board)` | everyone goes home → counts for untracked workers; arrays of worker IDs per player for tracked workers (untracked workers in a mixed group are `null`) |
+| `T.workers.returnAll(board)` | everyone goes home → `{ playerId: count }` for tracked and untracked workers (unchanged) |
+| `T.workers.returnAll(board, { ids: true })` | everyone goes home → `{ playerId: workerIds[] }` for tracked workers only; untracked workers are omitted |
 
 ```js
 actions: (s, { playerId }) => T.workers.available(s.board, playerId).map((space) => ({ name: 'place', args: { space } })),
@@ -383,7 +384,7 @@ A face-up row: an array of cards, where an empty slot is `null` (when cards don'
 
 | | |
 |---|---|
-| `T.market.refill(row, size, deck, discard, random)` | fill holes, then up to `size` cards, via `T.draw` → the new cards |
+| `T.market.refill(row, size, deck, discard, random, opts?)` | fill holes, then up to `size` cards, via `T.draw` → the new cards. `opts.reshuffle` defaults to `true`; set it to `false` to leave the discard pile untouched |
 | `T.market.take(row, i, slide = true)` | take the card in slot `i` → the card. `slide`: later cards move down a slot (getting cheaper); `false` leaves a hole |
 | `T.market.price(i, costs)` | `costs[i]` from a list (the last repeats), or `i × costs` for a number |
 | `T.market.clear(row, discard?)` | wipe the row (into `discard`) → the removed cards |
@@ -552,7 +553,7 @@ Functions take counts (`{ kind: n }`) or a plain list of items.
 | | |
 |---|---|
 | `T.sets.count(items, kind?)` | `{ kind: n }`; `kind` is a getter (default: the item itself) |
-| `T.sets.ofAKind(counts, n)` | how many groups of `n` identical items |
+| `T.sets.ofAKind(counts, n, kind?)` | how many groups of `n` identical items; `kind` can restrict the count to one kind or a list of kinds |
 | `T.sets.complete(counts, kinds)` | how many full sets of one of each `kinds` |
 | `T.sets.distinct(counts)` | sizes of sets of different kinds, largest first (`{ a: 3, b: 1, c: 2 }` → `[3, 2, 1]`) |
 | `T.sets.runs(values)` · `T.sets.longest(values)` | runs of consecutive numbers / the longest one's length |
@@ -573,12 +574,13 @@ const colours = T.sets.distinct(T.sets.count(p.cards, 'color')).reduce((a, n) =>
 | `T.area.tally(items, region = 'region', owner = 'owner', weight?)` | `{ region: { playerId: n } }` (getters; items without region or owner are skipped) |
 | `T.area.rank(counts, min = 1)` | one region → `[{ id, n, place }]`, ties share a place |
 | `T.area.control(counts, min = 1)` | the only player with the most, or `null` on a tie |
-| `T.area.majority(counts, awards = [5, 3, 1], { tie = 'split', min = 1 }?)` | one region → `{ playerId: points }` |
-| `T.area.score(tally, awards, opts?)` | majority scoring over every region; `awards` can be `(region) → [...]` |
+| `T.area.majority(counts, awards = [5, 3, 1], opts?)` | one region → `{ playerId: points }`; `opts.fewest` awards from fewest to most |
+| `T.area.score(tally, awards, opts?)` | majority scoring over every region; `awards` can be `(region) → [...]`; accepts the same `fewest` option |
 
 Tied players take up all the places they share. Tie rules for players tied over places *k…k+m−1*:
 `'split'` share the sum of those awards (rounded down), `'full'` each get the award of place *k*, `'down'` each get the
-lowest of them (El Grande), `'none'` get nothing.
+lowest of them (El Grande), `'none'` get nothing. `fewest: true` reverses the ranking while keeping these tie rules;
+it includes zero-count players by default. An explicit `min` still filters players below that count.
 
 ```js
 const tally = T.area.tally(s.pieces, 'region', 'owner');
