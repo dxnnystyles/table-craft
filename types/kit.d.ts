@@ -618,7 +618,7 @@ export interface SetsKit {
   /** `{ kind: n }`; `kind` is a getter (default: the item itself). */
   count<X>(items: readonly X[] | null | undefined, kind?: Getter<X>): Record<string, number>;
   /** How many groups of `n` identical items. */
-  ofAKind(counts: CountsOrItems, n: number): number;
+  ofAKind(counts: CountsOrItems, n: number, kind?: string | readonly string[]): number;
   /** How many complete sets of one of each of `kinds`. */
   complete(counts: CountsOrItems, kinds: readonly string[]): number;
   /** Sizes of sets of different kinds, largest first. */
