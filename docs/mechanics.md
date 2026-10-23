@@ -383,7 +383,7 @@ A face-up row: an array of cards, where an empty slot is `null` (when cards don'
 
 | | |
 |---|---|
-| `T.market.refill(row, size, deck, discard, random)` | fill holes, then up to `size` cards, via `T.draw` → the new cards |
+| `T.market.refill(row, size, deck, discard, random, opts?)` | fill holes, then up to `size` cards, via `T.draw` → the new cards. `opts.reshuffle` defaults to `true`; set it to `false` to leave the discard pile untouched |
 | `T.market.take(row, i, slide = true)` | take the card in slot `i` → the card. `slide`: later cards move down a slot (getting cheaper); `false` leaves a hole |
 | `T.market.price(i, costs)` | `costs[i]` from a list (the last repeats), or `i × costs` for a number |
 | `T.market.clear(row, discard?)` | wipe the row (into `discard`) → the removed cards |
@@ -552,7 +552,7 @@ Functions take counts (`{ kind: n }`) or a plain list of items.
 | | |
 |---|---|
 | `T.sets.count(items, kind?)` | `{ kind: n }`; `kind` is a getter (default: the item itself) |
-| `T.sets.ofAKind(counts, n)` | how many groups of `n` identical items |
+| `T.sets.ofAKind(counts, n, kind?)` | how many groups of `n` identical items; `kind` can restrict the count to one kind or a list of kinds |
 | `T.sets.complete(counts, kinds)` | how many full sets of one of each `kinds` |
 | `T.sets.distinct(counts)` | sizes of sets of different kinds, largest first (`{ a: 3, b: 1, c: 2 }` → `[3, 2, 1]`) |
 | `T.sets.runs(values)` · `T.sets.longest(values)` | runs of consecutive numbers / the longest one's length |

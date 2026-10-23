@@ -448,7 +448,7 @@ export interface RolesKit {
 /** `T.market`: a face-up row (an empty slot is `null` when cards don't slide). */
 export interface MarketKit {
   /** Fill holes, then up to `size` cards → the new cards. */
-  refill<C>(row: Array<C | null>, size: number, deck: C[], discard: C[] | null | undefined, random: Random): C[];
+  refill<C>(row: Array<C | null>, size: number, deck: C[], discard: C[] | null | undefined, random: Random, opts?: { reshuffle?: boolean }): C[];
   /** Take the card in slot `i` → it; `slide: false` leaves a hole. */
   take<C>(row: Array<C | null>, i: number, slide?: boolean): C | undefined;
   /** Cost of slot `i`: `costs[i]` (the last repeats) or `i × costs`. */
@@ -618,7 +618,7 @@ export interface SetsKit {
   /** `{ kind: n }`; `kind` is a getter (default: the item itself). */
   count<X>(items: readonly X[] | null | undefined, kind?: Getter<X>): Record<string, number>;
   /** How many groups of `n` identical items. */
-  ofAKind(counts: CountsOrItems, n: number): number;
+  ofAKind(counts: CountsOrItems, n: number, kind?: string | readonly string[]): number;
   /** How many complete sets of one of each of `kinds`. */
   complete(counts: CountsOrItems, kinds: readonly string[]): number;
   /** Sizes of sets of different kinds, largest first. */

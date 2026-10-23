@@ -47,7 +47,10 @@ export function installScoring(T) {
   };
   const cnt = (c) => (Array.isArray(c) ? C.count(c) : c || {});
   // how many groups of n identical items (pairs: n = 2)
-  C.ofAKind = (counts, n) => Object.values(cnt(counts)).reduce((a, v) => a + Math.floor(v / n), 0);
+  C.ofAKind = (counts, n, kind) => {
+    const kinds = kind == null ? null : (Array.isArray(kind) ? kind : [kind]);
+    return Object.entries(cnt(counts)).reduce((a, [k, v]) => a + (kinds && !kinds.includes(k) ? 0 : Math.floor(v / n)), 0);
+  };
   // how many complete sets holding one of each of `kinds`
   C.complete = (counts, kinds) => { const c = cnt(counts); return kinds && kinds.length ? Math.min(...kinds.map((k) => c[k] || 0)) : 0; };
   // sizes of the sets of different kinds, largest first ({ a: 3, b: 1, c: 2 } → [3, 2, 1])
