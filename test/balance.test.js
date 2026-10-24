@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { analyzeBalance, analyzeBalanceAsync, sweepParameter, compareReports, audit } from '../src/server/index.js';
 import { LocalGameModule } from '../src/client/local-module.js';
 import { analyzeBalance as coreAnalyze } from '../src/core/balance.js';
@@ -87,7 +88,7 @@ test('MCP: analyze_balance and sweep_parameter', async () => {
   const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
   const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
   const client = new Client({ name: 'balance-test', version: '0.0.0' });
-  await client.connect(new StdioClientTransport({ command: process.execPath, args: ['src/cli.js', 'mcp'], cwd: new URL('..', import.meta.url).pathname, stderr: 'ignore' }));
+  await client.connect(new StdioClientTransport({ command: process.execPath, args: ['src/cli.js', 'mcp'], cwd: fileURLToPath(new URL('..', import.meta.url)), stderr: 'ignore' }));
   try {
     const r = await client.callTool({ name: 'analyze_balance', arguments: { path: 'examples/coin-flip-duel/game.js', games: 100, players: 2 } });
     assert.equal(r.isError, false);

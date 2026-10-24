@@ -10,6 +10,7 @@ and the project uses [Semantic Versioning](https://semver.org/). Until 1.0, mino
 - **Rules kit:** `T.market.refill` accepts `{ reshuffle: false }` to leave the discard pile out of the deck when refilling.
 - **Rules kit:** `T.sets.ofAKind(counts, n, kind?)` can count groups for one kind or a list of kinds.
 - **Worker placement:** `T.workers.place` can track worker IDs; `T.workers.returnAll(board, { ids: true })` returns tracked IDs by player.
+- CLI: Added `--time <seconds>` to `simulate` and `balance` to set their time limit (60 seconds by default).
 - **Mechanics library** on the rules kit — [docs/mechanics.md](docs/mechanics.md) catalogs 40+ board-game mechanics and
   the helpers that implement them: `T.turns` (pass to end the round, snake and initiative order), `T.flow` (rounds,
   phases, "finish the round"), `T.pending` (decision/reaction stack), `T.workers`, `T.rondel`, `T.track`, `T.secret`

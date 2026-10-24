@@ -2,6 +2,12 @@
 
 Three optional exports turn a game module into something machines can play — and check.
 
+The command-line referee accepts `--time <seconds>` to change its time limit (60 seconds by default):
+
+```bash
+npx tablecraft simulate games/my-game.js --games 500 --time 90
+```
+
 ```js
 actions(state, { playerId }) { return [{ name: 'roll' }, { name: 'play', args: { card: 'c7' } }]; },
 bot(state, { playerId, actions, random }) { return actions.find((a) => a.name === 'play') || actions[0]; },
