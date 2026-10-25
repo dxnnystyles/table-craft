@@ -39,6 +39,9 @@ and the project uses [Semantic Versioning](https://semver.org/). Until 1.0, mino
   `T.findPath` and `T.reachable`.
 - Scene checks for hex positions and link ends; `supply-lines` example and MCP template.
 
+### Changed
+- Dutch auctions: `T.auction.take` now rejects IDs not in `order`, and creating one with no participants closes it immediately.
+
 ### Fixed
 - `validate()` always passes `options.content` to `setup` (`{}` when none was given), like matches and the referee do.
 - The Spotlight no longer announces face-down cards that land in your own seat (cards dealt, drafted or passed to you).

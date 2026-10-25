@@ -419,6 +419,10 @@ test('T.auction: open ascending, once around, dutch, sealed and legal bids', () 
   T.auction.lower(d2);
   assert.ok(T.auction.take(d2, 'b'));
   assert.deepEqual(T.auction.winner(d2), { id: 'b', price: 7 });
+  const legacy = T.auction.create(['b'], { kind: 'dutch', price: 10 });
+  delete legacy.declined;
+  assert.doesNotThrow(() => assert.ok(T.auction.take(legacy, 'b')));
+  assert.deepEqual(T.auction.winner(legacy), { id: 'b', price: 10 });
 
   assert.deepEqual(T.auction.sealed({ a: 5, b: 9, c: 9, d: 2 }, { order: ['c', 'b'] }), { id: 'c', bid: 9, price: 9, tied: ['b', 'c'] });
   assert.equal(T.auction.sealed({ a: 5, b: 9, c: 9 }).id, 'b');
@@ -434,7 +438,9 @@ test('T.auction: Dutch declines lower once per price and only eligible bidders m
   assert.deepEqual(a.order, ['a', 'b']);
   assert.deepEqual(a.declined, []);
   assert.ok(!T.auction.take(a, 'auctioneer'));
+  const beforeOutsiderTake = { ...a, order: [...a.order], declined: [...a.declined] };
   assert.ok(!T.auction.take(a, 'outsider'));
+  assert.deepEqual(a, beforeOutsiderTake);
   assert.ok(!T.auction.decline(a, 'auctioneer'));
   assert.ok(!T.auction.decline(a, 'outsider'));
 
@@ -442,7 +448,9 @@ test('T.auction: Dutch declines lower once per price and only eligible bidders m
   assert.equal(a.price, 12);
   assert.deepEqual(a.declined, ['a']);
   assert.ok(!T.auction.decline(a, 'a'));
+  const beforeDeclinedTake = { ...a, order: [...a.order], declined: [...a.declined] };
   assert.ok(!T.auction.take(a, 'a')); // declined at this price
+  assert.deepEqual(a, beforeDeclinedTake);
   assert.ok(T.auction.decline(a, 'b'));
   assert.equal(a.price, 9); // the last eligible decline lowers exactly one step
   assert.deepEqual(a.declined, []);
@@ -461,6 +469,9 @@ test('T.auction: Dutch declines lower once per price and only eligible bidders m
   assert.equal(floor.price, 6);
   assert.deepEqual(floor.declined, []);
   assert.ok(T.auction.done(floor));
+  const beforeClosedTake = { ...floor, order: [...floor.order], declined: [...floor.declined] };
+  assert.ok(!T.auction.take(floor, 'a'));
+  assert.deepEqual(floor, beforeClosedTake);
   assert.ok(!T.auction.decline(floor, 'a'));
 
   const empty = T.auction.create(['auctioneer'], { kind: 'dutch', exclude: ['auctioneer'] });

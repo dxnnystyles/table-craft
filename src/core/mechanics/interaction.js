@@ -78,7 +78,7 @@ export function installInteraction(T) {
     return true;
   };
   A.take = (a, id) => {
-    if (a.kind !== 'dutch' || A.done(a) || !a.order.includes(id) || a.declined.includes(id)) return false;
+    if (a.kind !== 'dutch' || A.done(a) || !a.order.includes(id) || (a.declined || []).includes(id)) return false;
     a.leader = id; a.high = a.price; return true;
   };
   // → { id, price } once the auction is over and someone won it, else null
